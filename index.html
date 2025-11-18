@@ -715,198 +715,215 @@
         }
         
         // Función para generar PDF
-        function generatePDF() {
-            // Verificar que haya al menos un servicio seleccionado
-            const total = calculateTotal();
-            if (total <= 0) {
-                showModal('Error', 'Por favor, selecciona al menos un servicio con cantidad mayor a 0 para generar la cotización.');
-                return;
-            }
-            
-            // Verificar datos del cliente
-            const companyName = document.getElementById('company-name').value;
-            const companyRFC = document.getElementById('company-rfc').value;
-            const contactName = document.getElementById('contact-name').value;
-            const contactEmail = document.getElementById('contact-email').value;
-            const contactPhone = document.getElementById('contact-phone').value;
-            const quoteValidity = document.getElementById('quote-validity').value;
-            
-            if (!companyName || !companyRFC || !contactName || !contactEmail) {
-                showModal('Error', 'Por favor, completa todos los datos del cliente antes de generar el PDF.');
-                return;
-            }
-            
-            // Crear instancia de jsPDF
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            
-            // Configuración de la cotización
-            const quoteDate = new Date().toLocaleDateString('es-MX');
-            const quoteNumber = 'COT-' + new Date().getTime();
-            
-            // Encabezado
-            doc.setFontSize(20);
-            doc.setTextColor(41, 128, 185);
-            doc.text('CRAZY SOFTWARE', 105, 20, { align: 'center' });
-            
-            doc.setFontSize(12);
-            doc.setTextColor(100, 100, 100);
-            doc.text('RFC: GAMM950528I59', 105, 28, { align: 'center' });
-            doc.text('Calle 16 #612, Tehuacán Puebla, México', 105, 34, { align: 'center' });
-            doc.text('Tel: (238) 145 86 80 | Email: remizeroaw117@gmail.com', 105, 40, { align: 'center' });
-            
-            // Título
-            doc.setFontSize(16);
-            doc.setTextColor(0, 0, 0);
-            doc.text('COTIZACIÓN DE SERVICIOS', 105, 55, { align: 'center' });
-            
-            // Información de la cotización
-            doc.setFontSize(10);
-            doc.text(`Número de Cotización: ${quoteNumber}`, 20, 65);
-            doc.text(`Fecha: ${quoteDate}`, 20, 71);
-            doc.text(`Validez: ${quoteValidity} días`, 20, 77);
-            
-            // Información del cliente
-            doc.setFontSize(12);
-            doc.setTextColor(41, 128, 185);
-            doc.text('DATOS DEL CLIENTE', 20, 90);
-            
-            doc.setFontSize(10);
-            doc.setTextColor(0, 0, 0);
-            doc.text(`Empresa: ${companyName}`, 20, 97);
-            doc.text(`RFC: ${companyRFC}`, 20, 103);
-            doc.text(`Contacto: ${contactName}`, 20, 109);
-            doc.text(`Email: ${contactEmail}`, 20, 115);
-            doc.text(`Teléfono: ${contactPhone}`, 20, 121);
-            
-            // Detalles de la cotización
-            doc.setFontSize(12);
-            doc.setTextColor(41, 128, 185);
-            doc.text('DETALLES DE LA COTIZACIÓN', 20, 135);
-            
-            // Preparar datos para la tabla
-            const tableData = [];
-            
-            // Puntos de venta
-            if (desktopQty.value > 0) {
-                tableData.push([
-                    'Punto de Venta de Escritorio',
-                    desktopQty.value,
-                    formatCurrency(prices.desktop),
-                    formatCurrency(desktopQty.value * prices.desktop)
-                ]);
-            }
-            
-            if (mobileQty.value > 0) {
-                tableData.push([
-                    'Punto de Venta Móvil',
-                    mobileQty.value,
-                    formatCurrency(prices.mobile),
-                    formatCurrency(mobileQty.value * prices.mobile)
-                ]);
-            }
-            
-            if (webQty.value > 0) {
-                tableData.push([
-                    'Punto de Venta Web',
-                    webQty.value,
-                    formatCurrency(prices.web),
-                    formatCurrency(webQty.value * prices.web)
-                ]);
-            }
-            
-            // Servicios en la nube
-            if (vpsCheck.checked) {
-                tableData.push([
-                    'Servidor VPS (anual)',
-                    1,
-                    formatCurrency(prices.vps),
-                    formatCurrency(prices.vps)
-                ]);
-            }
-            
-            if (domainCheck.checked) {
-                tableData.push([
-                    'Dominio Web (anual)',
-                    1,
-                    formatCurrency(prices.domain),
-                    formatCurrency(prices.domain)
-                ]);
-            }
-            
-            // Opciones adicionales
-            if (supportCheck.checked) {
-                tableData.push([
-                    'Soporte Técnico (hora)',
-                    1,
-                    formatCurrency(prices.support),
-                    formatCurrency(prices.support)
-                ]);
-            }
-            
-            if (devicesQty.value > 0) {
-                tableData.push([
-                    'Configuración Dispositivos Adicionales',
-                    devicesQty.value,
-                    formatCurrency(prices.devices),
-                    formatCurrency(devicesQty.value * prices.devices)
-                ]);
-            }
-            
-            if (trainingQty.value > 0) {
-                tableData.push([
-                    'Capacitación Personalizada',
-                    trainingQty.value,
-                    formatCurrency(prices.training),
-                    formatCurrency(trainingQty.value * prices.training)
-                ]);
-            }
-            
-            // Agregar tabla
-            doc.autoTable({
-                startY: 140,
-                head: [['Descripción', 'Cantidad', 'Precio Unitario', 'Importe']],
-                body: tableData,
-                theme: 'grid',
-                headStyles: {
-                    fillColor: [41, 128, 185],
-                    textColor: 255,
-                    fontStyle: 'bold'
-                },
-                styles: {
-                    fontSize: 9,
-                    cellPadding: 3
-                },
-                columnStyles: {
-                    0: { cellWidth: 'auto' },
-                    1: { cellWidth: 20, halign: 'center' },
-                    2: { cellWidth: 30, halign: 'right' },
-                    3: { cellWidth: 30, halign: 'right' }
-                }
-            });
-            
-            // Total
-            const finalY = doc.lastAutoTable.finalY + 10;
-            doc.setFontSize(12);
-            doc.setTextColor(0, 0, 0);
-            doc.text(`TOTAL: ${formatCurrency(total)}`, 150, finalY, { align: 'right' });
-            
-            // Notas
-            doc.setFontSize(9);
-            doc.setTextColor(100, 100, 100);
-            doc.text('Notas:', 20, finalY + 15);
-            doc.text('- Los precios no incluyen IVA.', 20, finalY + 22);
-            doc.text('- Los servicios marcados como mensuales se facturarán mensualmente.', 20, finalY + 28);
-            doc.text('- El dominio web y VPS tienen costo anual y deben renovarse cada año.', 20, finalY + 34);
-            doc.text('- El soporte técnico es marcado como hora, depende el tiempo de la solución.', 20, finalY + 40);
-            doc.text('- Esta cotización es válida por el tiempo indicado en el encabezado.', 20, finalY + 46);
-            doc.text('Puede consultar nuestro cotizador de precios en: https://blitzpc17.github.io/Cotizador/index.', 20, finalY + 52);
-            
-            // Guardar PDF
-            doc.save(`Cotizacion_${companyName.replace(/\s+/g, '_')}_${quoteNumber}.pdf`);
-            
-            showModal('Éxito', 'PDF generado correctamente.');
+  function generatePDF() {
+    // Verificar que haya al menos un servicio seleccionado
+    const total = calculateTotal();
+    if (total <= 0) {
+        showModal('Error', 'Por favor, selecciona al menos un servicio con cantidad mayor a 0 para generar la cotización.');
+        return;
+    }
+    
+    // Verificar datos del cliente
+    const companyName = document.getElementById('company-name').value;
+    const companyRFC = document.getElementById('company-rfc').value;
+    const contactName = document.getElementById('contact-name').value;
+    const contactEmail = document.getElementById('contact-email').value;
+    const contactPhone = document.getElementById('contact-phone').value;
+    const quoteValidity = document.getElementById('quote-validity').value;
+    
+    if (!companyName || !companyRFC || !contactName || !contactEmail) {
+        showModal('Error', 'Por favor, completa todos los datos del cliente antes de generar el PDF.');
+        return;
+    }
+    
+    // Crear instancia de jsPDF
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    // Configuración de la cotización
+    const quoteDate = new Date().toLocaleDateString('es-MX');
+    const quoteNumber = 'COT-' + new Date().getTime();
+    
+    // Encabezado
+    doc.setFontSize(20);
+    doc.setTextColor(41, 128, 185);
+    doc.text('CRAZY SOFTWARE', 105, 20, { align: 'center' });
+    
+    doc.setFontSize(12);
+    doc.setTextColor(100, 100, 100);
+    doc.text('RFC: GAMM950528I59', 105, 28, { align: 'center' });
+    doc.text('Calle 16 #612, Tehuacán Puebla, México', 105, 34, { align: 'center' });
+    doc.text('Tel: (238) 145 86 80 | Email: remizeroaw117@gmail.com', 105, 40, { align: 'center' });
+    
+    // Título
+    doc.setFontSize(16);
+    doc.setTextColor(0, 0, 0);
+    doc.text('COTIZACIÓN DE SERVICIOS', 105, 55, { align: 'center' });
+    
+    // Información de la cotización
+    doc.setFontSize(10);
+    doc.text(`Número de Cotización: ${quoteNumber}`, 20, 65);
+    doc.text(`Fecha: ${quoteDate}`, 20, 71);
+    doc.text(`Validez: ${quoteValidity} días`, 20, 77);
+    
+    // Información del cliente
+    doc.setFontSize(12);
+    doc.setTextColor(41, 128, 185);
+    doc.text('DATOS DEL CLIENTE', 20, 90);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`Empresa: ${companyName}`, 20, 97);
+    doc.text(`RFC: ${companyRFC}`, 20, 103);
+    doc.text(`Contacto: ${contactName}`, 20, 109);
+    doc.text(`Email: ${contactEmail}`, 20, 115);
+    doc.text(`Teléfono: ${contactPhone}`, 20, 121);
+    
+    // Detalles de la cotización
+    doc.setFontSize(12);
+    doc.setTextColor(41, 128, 185);
+    doc.text('DETALLES DE LA COTIZACIÓN', 20, 135);
+    
+    // Preparar datos para la tabla
+    const tableData = [];
+    
+    // Puntos de venta
+    if (desktopQty.value > 0) {
+        tableData.push([
+            'Punto de Venta de Escritorio',
+            desktopQty.value,
+            formatCurrency(prices.desktop),
+            formatCurrency(desktopQty.value * prices.desktop)
+        ]);
+    }
+    
+    if (mobileQty.value > 0) {
+        tableData.push([
+            'Punto de Venta Móvil',
+            mobileQty.value,
+            formatCurrency(prices.mobile),
+            formatCurrency(mobileQty.value * prices.mobile)
+        ]);
+    }
+    
+    if (webQty.value > 0) {
+        tableData.push([
+            'Punto de Venta Web',
+            webQty.value,
+            formatCurrency(prices.web),
+            formatCurrency(webQty.value * prices.web)
+        ]);
+    }
+    
+    // Servicios en la nube
+    if (vpsCheck.checked) {
+        tableData.push([
+            'Servidor VPS (anual)',
+            1,
+            formatCurrency(prices.vps),
+            formatCurrency(prices.vps)
+        ]);
+    }
+    
+    if (domainCheck.checked) {
+        tableData.push([
+            'Dominio Web (anual)',
+            1,
+            formatCurrency(prices.domain),
+            formatCurrency(prices.domain)
+        ]);
+    }
+    
+    // Opciones adicionales
+    if (supportCheck.checked) {
+        tableData.push([
+            'Soporte Técnico (hora)',
+            1,
+            formatCurrency(prices.support),
+            formatCurrency(prices.support)
+        ]);
+    }
+    
+    if (devicesQty.value > 0) {
+        tableData.push([
+            'Configuración Dispositivos Adicionales',
+            devicesQty.value,
+            formatCurrency(prices.devices),
+            formatCurrency(devicesQty.value * prices.devices)
+        ]);
+    }
+    
+    if (trainingQty.value > 0) {
+        tableData.push([
+            'Capacitación Personalizada',
+            trainingQty.value,
+            formatCurrency(prices.training),
+            formatCurrency(trainingQty.value * prices.training)
+        ]);
+    }
+    
+    // Agregar tabla
+    doc.autoTable({
+        startY: 140,
+        head: [['Descripción', 'Cantidad', 'Precio Unitario', 'Importe']],
+        body: tableData,
+        theme: 'grid',
+        headStyles: {
+            fillColor: [41, 128, 185],
+            textColor: 255,
+            fontStyle: 'bold'
+        },
+        styles: {
+            fontSize: 9,
+            cellPadding: 3
+        },
+        columnStyles: {
+            0: { cellWidth: 'auto' },
+            1: { cellWidth: 20, halign: 'center' },
+            2: { cellWidth: 30, halign: 'right' },
+            3: { cellWidth: 30, halign: 'right' }
         }
+    });
+    
+    // Total
+    const finalY = doc.lastAutoTable.finalY + 10;
+    doc.setFontSize(12);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`TOTAL: ${formatCurrency(total)}`, 150, finalY, { align: 'right' });
+    
+    // Notas
+    doc.setFontSize(9);
+    doc.setTextColor(100, 100, 100);
+    doc.text('Notas:', 20, finalY + 15);
+    doc.text('- Los precios no incluyen IVA.', 20, finalY + 22);
+    doc.text('- Los servicios marcados como mensuales se facturarán mensualmente.', 20, finalY + 28);
+    doc.text('- El dominio web y VPS tienen costo anual y deben renovarse cada año.', 20, finalY + 34);
+    doc.text('- El soporte técnico es marcado como hora, depende el tiempo de la solución.', 20, finalY + 40);
+    doc.text('- Esta cotización es válida por el tiempo indicado en el encabezado.', 20, finalY + 46);
+    
+    // Agregar enlace clickeable al cotizador
+    const linkY = finalY + 52;
+    doc.setTextColor(41, 128, 185);
+    doc.text('Puede consultar nuestro cotizador de precios en:', 20, linkY);
+    
+    // Crear un enlace clickeable (solo funcionará en algunos lectores de PDF)
+    const linkText = 'https://blitzpc17.github.io/Cotizador/index';
+    doc.textWithLink(linkText, 20, linkY + 6, {
+        url: linkText
+    });
+    
+    // Guardar PDF
+    doc.save(`Cotizacion_${companyName.replace(/\s+/g, '_')}_${quoteNumber}.pdf`);
+    
+    // Mostrar modal con enlace clickeable
+    showModal(
+        'Éxito', 
+        'PDF generado correctamente.<br><br>' +
+        'También puede consultar nuestro cotizador en línea: ' +
+        '<a href="https://blitzpc17.github.io/Cotizador/index" target="_blank" style="color: #3498db; text-decoration: underline;">' +
+        'https://blitzpc17.github.io/Cotizador/index</a>'
+    );
+}
         
         // Función para enviar por correo
         function sendEmail() {
